@@ -214,9 +214,6 @@ func (t *HotSpotFieldTraverser) FindDynamicAgentLoading(flagName string, flagsBy
 					}
 
 					fieldValueAddr := binary.LittleEndian.Uint64(t.buf)
-
-					// memory.setByte(0L, (byte) 1);
-					// access.writeProcessMemory(targetProcess, valueAddress, memory, 1);
 					res = uintptr(fieldValueAddr)
 				}
 			}

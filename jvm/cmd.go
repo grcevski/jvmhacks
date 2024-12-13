@@ -138,6 +138,7 @@ func readResponse(fd int, args []string, out chan []byte, logger *slog.Logger) i
 		if n == 0 || err != nil {
 			break
 		}
+		os.Stdout.Write(buf[:n])
 		out <- buf[:n]
 	}
 
@@ -178,6 +179,7 @@ func Jattach(pid int, argv []string, out chan []byte, logger *slog.Logger) int {
 
 	if util.GetProcessInfo(pid, &targetUID, &targetGID, &nspid) != nil {
 		logger.Error("process not found", "pid", pid)
+		close(out)
 		return 1
 	}
 
@@ -192,6 +194,7 @@ func Jattach(pid int, argv []string, out chan []byte, logger *slog.Logger) int {
 	if (myGID != targetGID && syscall.Setegid(int(targetGID)) != nil) ||
 		(myUID != targetUID && syscall.Seteuid(int(targetUID)) != nil) {
 		logger.Error("failed to change credentials to match the target process")
+		close(out)
 		return 1
 	}
 
@@ -205,6 +208,7 @@ func Jattach(pid int, argv []string, out chan []byte, logger *slog.Logger) int {
 	// Make write() return EPIPE instead of abnormal process termination
 	signal.Ignore(syscall.SIGPIPE)
 
-	defer close(out)
-	return jattachHotspot(pid, nspid, attachPid, argv, tmpPath, out, logger)
+	res := jattachHotspot(pid, nspid, attachPid, argv, tmpPath, out, logger)
+	close(out)
+	return res
 }

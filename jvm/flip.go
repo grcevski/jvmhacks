@@ -49,9 +49,9 @@ func EnableDynamicAgentLoading(pid int) (LoadStatus, error) {
 	}
 
 	javaProg, err := util.AttachToJavaProgram(info)
-	defer javaProg.DetachFromJavaProgram()
 
 	if err != nil {
+		javaProg.DetachFromJavaProgram()
 		return Error, fmt.Errorf("encountered an error attaching to the java process, error %v", err)
 	}
 
@@ -65,6 +65,7 @@ func EnableDynamicAgentLoading(pid int) (LoadStatus, error) {
 	}
 
 	if err != nil {
+		javaProg.DetachFromJavaProgram()
 		return Error, fmt.Errorf("can't read program memory %v", err)
 	}
 
@@ -87,6 +88,7 @@ func EnableDynamicAgentLoading(pid int) (LoadStatus, error) {
 	}
 
 	if err != nil {
+		javaProg.DetachFromJavaProgram()
 		return Error, fmt.Errorf("can't read fields %v", err)
 	}
 
@@ -98,6 +100,8 @@ func EnableDynamicAgentLoading(pid int) (LoadStatus, error) {
 		flagsByType, ok = fields[flagName]
 
 		if !ok {
+			javaProg.DetachFromJavaProgram()
+			fmt.Printf("flags %v", fields)
 			return Error, fmt.Errorf("JVMFlag not found, aborting ...")
 		}
 	}
@@ -121,6 +125,7 @@ func EnableDynamicAgentLoading(pid int) (LoadStatus, error) {
 	}
 
 	if err != nil {
+		javaProg.DetachFromJavaProgram()
 		return Error, fmt.Errorf("can't read JVM flag %v", err)
 	}
 
@@ -136,8 +141,10 @@ func EnableDynamicAgentLoading(pid int) (LoadStatus, error) {
 		}
 
 		if err != nil {
+			javaProg.DetachFromJavaProgram()
 			return Error, fmt.Errorf("failed to read field addr, error %v", err)
 		}
+		fmt.Printf("fieldAddr %x\n", fieldAddr)
 
 		if bytes[0] == byte(0) {
 			set := []byte{1}
@@ -148,6 +155,7 @@ func EnableDynamicAgentLoading(pid int) (LoadStatus, error) {
 				}
 			}
 			if err != nil {
+				javaProg.DetachFromJavaProgram()
 				return Error, fmt.Errorf("encountered error writing memory %v", err)
 			}
 			status = FlippedFlag
@@ -156,5 +164,6 @@ func EnableDynamicAgentLoading(pid int) (LoadStatus, error) {
 		}
 	}
 
+	javaProg.DetachFromJavaProgram()
 	return status, nil
 }
