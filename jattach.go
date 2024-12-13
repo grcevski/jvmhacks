@@ -28,6 +28,8 @@ func validCommand(arg string) bool {
 }
 
 func main() {
+	logger := slog.With("component", "jattach")
+
 	if len(os.Args) < 3 {
 		fmt.Println("Usage: jattach <pid> <cmd> [args ...]")
 		fmt.Println("Commands:")
@@ -53,9 +55,9 @@ func main() {
 	status, err := jvm.EnableDynamicAgentLoading(pid)
 
 	if err != nil {
-		fmt.Printf("encountered error while enabling dynamic loading %v\n", err)
+		logger.Error("encountered error while enabling dynamic loading", "error", err)
 	} else {
-		fmt.Printf("dynamic loading status %d\n", status)
+		logger.Info("dynamic loading status", "result", status)
 	}
 
 	out := make(chan []byte)
@@ -65,8 +67,6 @@ func main() {
 			os.Stdout.Write(data)
 		}
 	}()
-
-	logger := slog.With("component", "go.Tracer")
 
 	exitCode := jvm.Jattach(pid, os.Args[2:], out, logger)
 

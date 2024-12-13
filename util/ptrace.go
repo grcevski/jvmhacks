@@ -122,6 +122,7 @@ func (p *JavaProgram) DetachFromJavaProgram() error {
 				return err
 			}
 		}
+		waitPid(tid)
 	}
 
 	return nil
